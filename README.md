@@ -27,10 +27,10 @@ There is no harm in leaving the code the same even if the pump isn't conencted.
 The pinouts for this are trying to remain close to what is used by the octobanger software so it can be programmed with octobanger if needed without changing the wiring.
 Octobanger adapter board -> https://www.scarecompany.com/product/octopill-prop-controller-shield-assembled/
 OctoBanger software -> http://buttonbanger.com/?page_id=164
-///outputs 
+-outputs 
 pins 2-9 : relays 1-8
 pin 10 : trigger out
 pin 12 : audio trigger out
 
-///inputs
+-inputs
 pin 11 : trigger in
