@@ -4,6 +4,7 @@ Auto reloading gore canon program.
 This program uses arduino IDE to program an arduino nano.
 
 It also used the following libraries that will need to be installed locally to your arduino instance.
+
 -RBD_Timer
 -RBD_Button
 
@@ -23,7 +24,7 @@ There is no harm in leaving the code the same even if the pump isn't conencted.
 
 
 
-# Arduino Nano Pin Plan.
+# Octobanger Pin Plan.
 The pinouts for this are trying to remain close to what is used by the octobanger software so it can be programmed with octobanger if needed without changing the wiring.
 Octobanger adapter board -> https://www.scarecompany.com/product/octopill-prop-controller-shield-assembled/
 OctoBanger software -> http://buttonbanger.com/?page_id=164
