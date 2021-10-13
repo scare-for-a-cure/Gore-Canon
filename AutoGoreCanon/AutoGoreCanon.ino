@@ -21,7 +21,7 @@ Last updated: 2021/09/30
 #include <RBD_Timer.h>  // https://github.com/alextaujenis/RBD_Timer
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
-#define pumprate 70 //gph of pump used to pump blood
+#define pumprate 140 //gph of pump used to pump blood
 #define ttl LOW // define wether the signal to the relay board is high or low
 
 //inputs
@@ -32,6 +32,7 @@ int air_relay = 3;
 int pump_relay = 2;
 int audio_out = 4; // output to audio controller device. 
 int LED_Armed = 13;
+int LED_Armed2 = 5; //setting up one of the relays for the arming indicator as well
 
 //buttons
 RBD::Button trigger = 11; //can either have 11 be a button 
@@ -62,6 +63,12 @@ void setup() {
   
   pinMode(audio_out, OUTPUT);
   digitalWrite(audio_out, !ttl);
+
+  pinMode(LED_Armed, OUTPUT);
+  digitalWrite(audio_out, LOW);
+
+  pinMode(LED_Armed2, OUTPUT);
+  digitalWrite(audio_out, !ttl);  
   
   pinMode(pumpPot, INPUT);
    
@@ -88,26 +95,29 @@ void loop() {
     if(led.onRestart()){
       ledState = !ledState;
       digitalWrite(LED_Armed, ledState);
+      digitalWrite(LED_Armed2, ledState);
     }
   }
   
   if(standby.onExpired()){
     Serial.println("Standby time has elapsed");
     digitalWrite(LED_Armed, HIGH);
+    digitalWrite(LED_Armed2, ttl); 
   }
   
   
   if(standby.isExpired() && trigger.onPressed()){ 
   //if(standby.isExpired() && true ){   // this line is used to constantly trigger the cycle for testing
-    standby.restart();
+    standby.stop();
     Serial.println("button was pressed");
     Serial.println("air was triggered");
     digitalWrite(LED_Armed, LOW); // LED is iether built in or wired externally, so it doesn't use the relays ttl
+    digitalWrite(LED_Armed2, !ttl);
     digitalWrite(air_relay, ttl);
     digitalWrite(audio_out, ttl);
     audio.restart();
-    potRead = analogRead(pumpPot);
-    //potRead = 100; //not using potentiometer, just setting value in code.
+    //potRead = analogRead(pumpPot);
+    potRead = 512; //not using potentiometer, just setting value in code.
     air.restart();
     
   }
