@@ -31,19 +31,19 @@ int pumpPot = A0; // potentiometer that adjusts the water pump time.
 int air_relay = 3;
 int pump_relay = 2;
 int audio_out = 4; // output to audio controller device. 
-int LED_Armed = 13;
-int LED_Armed2 = 5; //setting up one of the relays for the arming indicator as well
+int LED_Armed = 13; //using the built in led as a armed status led
+int LED_Armed2 = 5; //setting up one of the unused relays for the arming indicator as well
 
 //buttons
 RBD::Button trigger = 11; //can either have 11 be a button 
 
 //timers
-RBD::Timer air; // how long the air will cycle for
-RBD::Timer pause; // how long it will wait before starting the pump
-RBD::Timer dispense; // how long the water pump will cycle for
-RBD::Timer standby; //lock the system from being triggered again for a given amount of time
-RBD::Timer audio; //used to stop trigger for audio if needed
-RBD::Timer led; // used to flash arming LED progressively faster as it gets ready to fire again
+RBD::Timer air(1000); // how long the air will cycle for
+RBD::Timer pause(2000); // how long it will wait before starting the pump
+RBD::Timer dispense(5000); // how long the water pump will cycle for
+RBD::Timer standby(5000); //lock the system from being triggered again for a given amount of time
+RBD::Timer audio(100); //used to stop trigger for audio if needed
+RBD::Timer led(100); // used to flash arming LED progressively faster as it gets ready to fire again
 
 //global variables
 int potRead = 0;
@@ -72,20 +72,11 @@ void setup() {
   
   pinMode(pumpPot, INPUT);
    
-  air.setTimeout(1000); // set for air to trigger for 1.0 seconds
   air.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
-
-  audio.setTimeout(100); //used to stop trigger for audio if needed
   audio.onExpired();
-
-  pause.setTimeout(2000); // set to wait for 0.5 second after canon has stopped to start pumping water
   pause.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
-
-  dispense.setTimeout(5000); // dispense time will be set when the trigger button is pressed 
   dispense.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
-
-  standby.setTimeout(30000); // sets the system to standby for 30 seconds after last trigger 
-  standby.restart(); // puts the system in 30 second standby on boot
+  standby.restart(); // puts the system in 5 second standby on boot
 
 }
 
@@ -108,7 +99,7 @@ void loop() {
   
   if(standby.isExpired() && trigger.onPressed()){ 
   //if(standby.isExpired() && true ){   // this line is used to constantly trigger the cycle for testing
-    standby.stop();
+    standby.stop(); // turns off standby so its not blinking in the active stage, it will start blinking once it is restarted att he end of the action.
     Serial.println("button was pressed");
     Serial.println("air was triggered");
     digitalWrite(LED_Armed, LOW); // LED is iether built in or wired externally, so it doesn't use the relays ttl
@@ -147,7 +138,9 @@ void loop() {
     digitalWrite(pump_relay, !ttl);
     Serial.println("Pump has been turned off");
     Serial.println("System is now on standby");
-    standby.restart(); // standby wait time starts when the canon was triggered
+    standby.setTimeout(30000); //sets the timeout for standby to be 30 seconds, so its only 5 seconds upon boot. (this helps with diagnosing a emf reboot)
+    standby.restart(); // standby wait time once all the actions have completed, and starts blinking the armed led
+    
   }
 
 
