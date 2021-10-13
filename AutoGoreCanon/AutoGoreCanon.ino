@@ -21,6 +21,8 @@ Last updated: 2021/09/30
 #include <RBD_Timer.h>  // https://github.com/alextaujenis/RBD_Timer
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
+#define pumprate 70 //gph of pump used to pump blood
+#define ttl LOW // define wether the signal to the relay board is high or low
 
 //inputs
 int pumpPot = A0; // potentiometer that adjusts the water pump time.
@@ -40,80 +42,99 @@ RBD::Timer pause; // how long it will wait before starting the pump
 RBD::Timer dispense; // how long the water pump will cycle for
 RBD::Timer standby; //lock the system from being triggered again for a given amount of time
 RBD::Timer audio; //used to stop trigger for audio if needed
+RBD::Timer led; // used to flash arming LED progressively faster as it gets ready to fire again
 
 //global variables
 int potRead = 0;
 int pumptime = 0;
+int pumptime_max = 10000; // set the default max time to 10 seconds, this will adjust in the actual program based on the defined pump rate above
+int ledState = LOW; //tracks whether the LED is currently high or low during its flashing state
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Begin Initialization");
+  
   pinMode(air_relay, OUTPUT);
+  digitalWrite(air_relay, !ttl);
+  
   pinMode(pump_relay, OUTPUT);
+  digitalWrite(pump_relay, !ttl);
+  
+  pinMode(audio_out, OUTPUT);
+  digitalWrite(audio_out, !ttl);
+  
   pinMode(pumpPot, INPUT);
-  air.setTimeout(1500); // set for air to trigger for 0.3 seconds
-  if(air.onExpired()){ //need to make sure the on.Expired value is called beore entiring main program.
-    delay(1);
-  }
+   
+  air.setTimeout(1000); // set for air to trigger for 1.0 seconds
+  air.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
+
+  audio.setTimeout(100); //used to stop trigger for audio if needed
+  audio.onExpired();
+
   pause.setTimeout(2000); // set to wait for 0.5 second after canon has stopped to start pumping water
-  if(pause.onExpired()){ //need to make sure the on.Expired value is called beore entiring main program.
-    delay(1);
-  }
+  pause.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
+
   dispense.setTimeout(5000); // dispense time will be set when the trigger button is pressed 
-  if(dispense.onExpired()){ //need to make sure the on.Expired value is called beore entiring main program.
-    delay(1);
-  }
+  dispense.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
+
   standby.setTimeout(30000); // sets the system to standby for 30 seconds after last trigger 
   standby.restart(); // puts the system in 30 second standby on boot
-  while (standby.isActive()){ //need to initiatilize all the timers
-    delay(1);    
-  }
+
 }
 
 void loop() {
+  if(standby.isActive()){ // this script handles the flashing of the armed led to go progressively faster as it gets ready to arm.
+    led.setTimeout( map(standby.getInversePercentValue(), 0, 100, 50, 1000)) ;
+    if(led.onRestart()){
+      ledState = !ledState;
+      digitalWrite(LED_Armed, ledState);
+    }
+  }
+  
   if(standby.onExpired()){
     Serial.println("Standby time has elapsed");
     digitalWrite(LED_Armed, HIGH);
   }
   
-  if((standby.isActive()) && (trigger.onPressed())){
-    Serial.println("button was pressed, but still in stand by");
-  }
   
-  if((standby.isExpired()) && trigger.onPressed()){
+  if(standby.isExpired() && trigger.onPressed()){ 
+  //if(standby.isExpired() && true ){   // this line is used to constantly trigger the cycle for testing
+    standby.restart();
     Serial.println("button was pressed");
     Serial.println("air was triggered");
-    digitalWrite(LED_Armed, LOW);
-    digitalWrite(air_relay, HIGH);
-    digitalWrite(audio_out, HIGH);
-    //potRead = analogRead(pumpPot);
-    potRead = 800; //not using potentiometer, just setting value in code.
+    digitalWrite(LED_Armed, LOW); // LED is iether built in or wired externally, so it doesn't use the relays ttl
+    digitalWrite(air_relay, ttl);
+    digitalWrite(audio_out, ttl);
+    audio.restart();
+    potRead = analogRead(pumpPot);
+    //potRead = 100; //not using potentiometer, just setting value in code.
     air.restart();
     
   }
 
   if( audio.onExpired()){
-    digitalWrite(audio_out, LOW);
+    digitalWrite(audio_out, !ttl);
   }
 
   if( air.onExpired()){
-    digitalWrite(air_relay, LOW);
+    digitalWrite(air_relay, !ttl);
     Serial.println("Air was turned off");
     Serial.println("waiting before turning on pump");
     pause.restart();
   }
 
   if( pause.onExpired()){
-    digitalWrite(pump_relay, HIGH);
+    digitalWrite(pump_relay, ttl);
     Serial.println("Pump has been turned on");
-    pumptime = map(potRead, 0, 1023, 1000, 10000); // map (input, input_low, input_high, output_low, output_high)
+    pumptime_max = 700000 / pumprate;
+    pumptime = map(potRead, 0, 1023, 1000, pumptime_max ); // map (input, input_low, input_high, output_low, output_high)
     // pump time has a range of 1 sec - 10 sec depending on position of potentiometer.
     dispense.setTimeout(pumptime);
     dispense.restart();
   }
 
   if( dispense.onExpired()){
-    digitalWrite(pump_relay, LOW);
+    digitalWrite(pump_relay, !ttl);
     Serial.println("Pump has been turned off");
     Serial.println("System is now on standby");
     standby.restart(); // standby wait time starts when the canon was triggered
