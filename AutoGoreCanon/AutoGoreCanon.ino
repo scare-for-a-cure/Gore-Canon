@@ -65,10 +65,10 @@ void setup() {
   digitalWrite(audio_out, !ttl);
 
   pinMode(LED_Armed, OUTPUT);
-  digitalWrite(audio_out, LOW);
+  digitalWrite(LED_Armed, LOW);
 
   pinMode(LED_Armed2, OUTPUT);
-  digitalWrite(audio_out, !ttl);  
+  digitalWrite(LED_Armed2, !ttl);  
   
   pinMode(pumpPot, INPUT);
    
@@ -82,7 +82,7 @@ void setup() {
 
 void loop() {
   if(standby.isActive()){ // this script handles the flashing of the armed led to go progressively faster as it gets ready to arm.
-    led.setTimeout( map(standby.getInversePercentValue(), 0, 100, 50, 1000)) ;
+    led.setTimeout( map(standby.getPercentValue(), 0, 100, 1000, 50)) ;
     if(led.onRestart()){
       ledState = !ledState;
       digitalWrite(LED_Armed, ledState);
