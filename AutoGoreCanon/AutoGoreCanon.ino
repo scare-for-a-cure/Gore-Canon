@@ -21,8 +21,8 @@ Last updated: 2021/09/30
 #include <RBD_Timer.h>  // https://github.com/alextaujenis/RBD_Timer
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
-#define pumprate 140 //gph of pump used to pump blood
-#define ttl LOW // define wether the signal to the relay board is high or low
+#define pumprate 70 //gph of pump used to pump blood
+#define ttl HIGH // define wether the signal to the relay board is high or low
 
 //inputs
 int pumpPot = A0; // potentiometer that adjusts the water pump time.
@@ -107,8 +107,8 @@ void loop() {
     digitalWrite(air_relay, ttl);
     digitalWrite(audio_out, ttl);
     audio.restart();
-    //potRead = analogRead(pumpPot);
-    potRead = 512; //not using potentiometer, just setting value in code.
+    potRead = analogRead(pumpPot);
+    //potRead = 512; //not using potentiometer, just setting value in code.
     air.restart();
     
   }
