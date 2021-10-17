@@ -24,6 +24,10 @@ Last updated: 2021/09/30
 #define pumprate 70 //gph of pump used to pump blood
 #define ttl HIGH // define wether the signal to the relay board is high or low
 
+///^ Define system config ^/// 
+////////////////////////////////////////////
+/// V leave the below code alone V ///
+
 //inputs
 int pumpPot = A0; // potentiometer that adjusts the water pump time.
 
@@ -51,9 +55,40 @@ int pumptime = 0;
 int pumptime_max = 10000; // set the default max time to 10 seconds, this will adjust in the actual program based on the defined pump rate above
 int ledState = LOW; //tracks whether the LED is currently high or low during its flashing state
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////
+///V- Sub Functions -V ///
+//////////////////////////
+
+void ArmBlink(){ // handles blinking of the arming light
+    if(standby.isActive()){ // this script handles the flashing of the armed led to go progressively faster as it gets ready to arm.
+    led.setTimeout( map(standby.getPercentValue(), 0, 100, 1000, 50)) ;
+    if(led.onRestart()){
+      ledState = !ledState;
+      digitalWrite(LED_Armed, ledState);
+    }
+  }
+  
+  if(standby.onExpired()){
+    Serial.println("Standby time has elapsed");
+    ledState = HIGH;
+    digitalWrite(LED_Armed, HIGH);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////
+///V-Main Functions-V///
+////////////////////////
+
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Begin Initialization");
+
+  trigger.setDebounceTimeout(10);
   
   pinMode(air_relay, OUTPUT);
   digitalWrite(air_relay, !ttl);
@@ -81,22 +116,9 @@ void setup() {
 }
 
 void loop() {
-  if(standby.isActive()){ // this script handles the flashing of the armed led to go progressively faster as it gets ready to arm.
-    led.setTimeout( map(standby.getPercentValue(), 0, 100, 1000, 50)) ;
-    if(led.onRestart()){
-      ledState = !ledState;
-      digitalWrite(LED_Armed, ledState);
-      digitalWrite(LED_Armed2, ledState);
-    }
-  }
-  
-  if(standby.onExpired()){
-    Serial.println("Standby time has elapsed");
-    digitalWrite(LED_Armed, HIGH);
-    digitalWrite(LED_Armed2, ttl); 
-  }
   
   
+    
   if(standby.isExpired() && trigger.onPressed()){ 
   //if(standby.isExpired() && true ){   // this line is used to constantly trigger the cycle for testing
     standby.stop(); // turns off standby so its not blinking in the active stage, it will start blinking once it is restarted att he end of the action.
@@ -108,10 +130,16 @@ void loop() {
     digitalWrite(audio_out, ttl);
     audio.restart();
     potRead = analogRead(pumpPot);
-    //potRead = 512; //not using potentiometer, just setting value in code.
     air.restart();
     
   }
+
+/// INPUT BASED EVENTS GO ABOVE
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// TIMING BASED EVENTS GO BELOW
+
+  ArmBlink(); // handles blinking led for arming status update
+  digitalWrite(LED_Armed2, ledState);
 
   if( audio.onExpired()){
     digitalWrite(audio_out, !ttl);
@@ -129,6 +157,7 @@ void loop() {
     Serial.println("Pump has been turned on");
     pumptime_max = 700000 / pumprate;
     pumptime = map(potRead, 0, 1023, 1000, pumptime_max ); // map (input, input_low, input_high, output_low, output_high)
+    //pumptime = 3500; // when not using potentiometer, specify pump time.
     // pump time has a range of 1 sec - 10 sec depending on position of potentiometer.
     dispense.setTimeout(pumptime);
     dispense.restart();
