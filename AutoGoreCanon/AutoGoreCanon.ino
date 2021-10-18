@@ -3,26 +3,28 @@ Orginization: Scare for a Cure
 Project: Auto-Gore Canon
 
 Description:
-Program used to control auto refill and firing gore-canon
+Program used to control the firing of, and the auto firing of a gore canon
+
 
 Features:
 -potentiometer to set pump time
 -output to trigger outside audio device
 -standby time to prevent re-triggering
-
+-countdown clicking with relay to let you know when standby time is about to expire
 
 Programmed by: James Manley
 contact: jamesmanley1992@gmail.com
 
-Last updated: 2021/09/30
+Last updated: 2021/10/17
 */
 
 //LIBRARIES
 #include <RBD_Timer.h>  // https://github.com/alextaujenis/RBD_Timer
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
-#define pumprate 70 //gph of pump used to pump blood
+#define pumprate 70 //gph of pump used to pump blood, alters the pump duration read by the potentiometer.
 #define ttl HIGH // define wether the signal to the relay board is high or low
+#define PumpDuration = 0 //  amount of time in MS you want the pump to run, 0 means it will listen to the potentiometer instead.
 
 ///^ Define system config ^/// 
 ////////////////////////////////////////////
@@ -89,6 +91,9 @@ void setup() {
   Serial.println("Begin Initialization");
 
   trigger.setDebounceTimeout(10);
+
+  pinMode(LED_Armed, OUTPUT);
+  digitalWrite(LED_Armed, LOW);
   
   pinMode(air_relay, OUTPUT);
   digitalWrite(air_relay, !ttl);
@@ -99,19 +104,19 @@ void setup() {
   pinMode(audio_out, OUTPUT);
   digitalWrite(audio_out, !ttl);
 
-  pinMode(LED_Armed, OUTPUT);
-  digitalWrite(LED_Armed, LOW);
-
-  pinMode(LED_Armed2, OUTPUT);
+  pinMode(LED_Armed2, OUTPUT); // led armed 2 is just for a clicking relay to let you know if it is about to arm.
   digitalWrite(LED_Armed2, !ttl);  
   
   pinMode(pumpPot, INPUT);
+
    
   air.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
   audio.onExpired();
   pause.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
   dispense.onExpired(); //need to make sure the on.Expired value is called before entiring main program.
   standby.restart(); // puts the system in 5 second standby on boot
+
+  pumptime_max = 700000 / pumprate;
 
 }
 
@@ -129,7 +134,6 @@ void loop() {
     digitalWrite(air_relay, ttl);
     digitalWrite(audio_out, ttl);
     audio.restart();
-    potRead = analogRead(pumpPot);
     air.restart();
     
   }
@@ -139,7 +143,7 @@ void loop() {
 /// TIMING BASED EVENTS GO BELOW
 
   ArmBlink(); // handles blinking led for arming status update
-  digitalWrite(LED_Armed2, ledState);
+  digitalWrite(LED_Armed2, ledState); // comment this line to disable clicking relay arming sequence
 
   if( audio.onExpired()){
     digitalWrite(audio_out, !ttl);
@@ -155,13 +159,21 @@ void loop() {
   if( pause.onExpired()){
     digitalWrite(pump_relay, ttl);
     Serial.println("Pump has been turned on");
-    pumptime_max = 700000 / pumprate;
-    pumptime = map(potRead, 0, 1023, 1000, pumptime_max ); // map (input, input_low, input_high, output_low, output_high)
-    //pumptime = 3500; // when not using potentiometer, specify pump time.
+
     // pump time has a range of 1 sec - 10 sec depending on position of potentiometer.
-    dispense.setTimeout(pumptime);
+    
+    if(PumpDuration > 0){ // if pump duration is positive then time the specified will be the amount of pour time.
+      dispense.setTimeout(PumpDuration);
+    }
+    else{
+      potRead = analogRead(pumpPot); // read potentiometer
+      pumptime = map(potRead, 0, 1023, 1000, pumptime_max ); // map (input, input_low, input_high, output_low, output_high) // map potentiometer reading to pour time
+      dispense.setTimeout(pumptime); // set pour time to potentiometer mapped reading.
+    }
+    
     dispense.restart();
   }
+
 
   if( dispense.onExpired()){
     digitalWrite(pump_relay, !ttl);
