@@ -24,7 +24,8 @@ Last updated: 2021/10/17
 
 #define pumprate 70 //gph of pump used to pump blood, alters the pump duration read by the potentiometer.
 #define ttl HIGH // define wether the signal to the relay board is high or low
-#define PumpDuration = 0 //  amount of time in MS you want the pump to run, 0 means it will listen to the potentiometer instead.
+#define PumpDuration  0 //  amount of time in MS you want the pump to run, 0 means it will listen to the potentiometer instead.
+#define Debounce  10 // debounce setting for trigger, default 10 ms
 
 ///^ Define system config ^/// 
 ////////////////////////////////////////////
@@ -54,7 +55,8 @@ RBD::Timer led(100); // used to flash arming LED progressively faster as it gets
 //global variables
 int potRead = 0;
 int pumptime = 0;
-int pumptime_max = 10000; // set the default max time to 10 seconds, this will adjust in the actual program based on the defined pump rate above
+int pumptime_max = 0; 
+int pumptime_min = 0;
 int ledState = LOW; //tracks whether the LED is currently high or low during its flashing state
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +92,7 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Begin Initialization");
 
-  trigger.setDebounceTimeout(10);
+  trigger.setDebounceTimeout(Debounce);
 
   pinMode(LED_Armed, OUTPUT);
   digitalWrite(LED_Armed, LOW);
@@ -117,6 +119,7 @@ void setup() {
   standby.restart(); // puts the system in 5 second standby on boot
 
   pumptime_max = 700000 / pumprate;
+  pumptime_min = pumptime_max / 10;
 
 }
 
