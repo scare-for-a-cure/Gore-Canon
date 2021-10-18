@@ -16,16 +16,32 @@ Programmed by: James Manley
 contact: jamesmanley1992@gmail.com
 
 Last updated: 2021/10/17
+
+Pinout Plan:
+[0/1] TX/RX
+[2] Pump Relay
+[3] Air Relay
+[4] Audio Relay
+[5-9] Relay 4-8
+[11] Input Trigger
+[13] Arming Status LED
+[A0] Pump Time Potentiometer
+
+
 */
 
 //LIBRARIES
 #include <RBD_Timer.h>  // https://github.com/alextaujenis/RBD_Timer
 #include <RBD_Button.h> // https://github.com/alextaujenis/RBD_Button
 
+/////////////////////////////////////////////////////
+/// V Define system Config V ///
+
 #define pumprate 70 //gph of pump used to pump blood, alters the pump duration read by the potentiometer.
 #define ttl HIGH // define wether the signal to the relay board is high or low
 #define PumpDuration  0 //  amount of time in MS you want the pump to run, 0 means it will listen to the potentiometer instead.
 #define Debounce  10 // debounce setting for trigger, default 10 ms
+#define audioDuration 100 // set how long the high signal for audio should be, typical 100 for a pulse start
 
 ///^ Define system config ^/// 
 ////////////////////////////////////////////
@@ -49,7 +65,7 @@ RBD::Timer air(1000); // how long the air will cycle for
 RBD::Timer pause(2000); // how long it will wait before starting the pump
 RBD::Timer dispense(5000); // how long the water pump will cycle for
 RBD::Timer standby(5000); //lock the system from being triggered again for a given amount of time
-RBD::Timer audio(100); //used to stop trigger for audio if needed
+RBD::Timer audio(audioDuration); //used to stop trigger for audio if needed
 RBD::Timer led(100); // used to flash arming LED progressively faster as it gets ready to fire again
 
 //global variables
