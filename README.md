@@ -33,10 +33,10 @@ outputs
 
 -pins 2-9 : relays 1-8
 
--pin 10 : trigger out
-
--pin 12 : audio trigger out
-
 inputs
 
 -pin 11 : trigger in
+
+
+# DC Solenoids
+Anytime you plan to use a relay to power a solenoid, you will likely need to install flyback diodes, even if your using a opto isolated relay, the EMF from a solenoid when it turns off can cause many micro controllers to randomly reboot.
