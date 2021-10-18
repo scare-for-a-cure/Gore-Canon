@@ -13,7 +13,7 @@ Features:
 -countdown clicking with relay to let you know when standby time is about to expire
 
 Programmed by: James Manley
-contact: jamesmanley1992@gmail.com
+contact: james.manley@scareforacure.org
 
 Last updated: 2021/10/17
 
