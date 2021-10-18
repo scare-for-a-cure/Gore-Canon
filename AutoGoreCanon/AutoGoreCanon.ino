@@ -18,14 +18,15 @@ contact: jamesmanley1992@gmail.com
 Last updated: 2021/10/17
 
 Pinout Plan:
-[0/1] TX/RX
-[2] Pump Relay
-[3] Air Relay
-[4] Audio Relay
-[5-9] Relay 4-8
-[11] Input Trigger
-[13] Arming Status LED
-[A0] Pump Time Potentiometer
+[0/1] TX/RX // used for serial communication, avoid using these as they'll cause false  triggers if serial communication is on.
+[2] Pump Relay // turns on relay that controls AC circuit to control pump that moves the blood
+[3] Air Relay // turns on relay that controls air solenoid, make sure to install a fly back diode on solenoid
+[4] Audio Relay // turns on relay that provides signal to external audio controler
+[5] Arming Status Clicking // clicks relay for a audible queue of the arm status, could also be connected to a light
+[6-9] Relay 5-8 // these relays aren't used but kept clear incase a future need arises.
+[11] Input Trigger // pin the trigger button or sensor is connected to
+[13] Arming Status LED // the built in LED that blinks to indicate time left in standby phase
+[A0] Pump Time Potentiometer // potentiometer to adjust the pump time on the fly in the field.
 
 
 */
