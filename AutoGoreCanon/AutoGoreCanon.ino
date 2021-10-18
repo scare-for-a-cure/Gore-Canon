@@ -79,6 +79,13 @@ void ArmBlink(){ // handles blinking of the arming light
     ledState = HIGH;
     digitalWrite(LED_Armed, HIGH);
   }
+    
+  if(standby.isStopped()){ // if the affect is runnign turn off the armed led light.
+    ledState = LOW;
+    digitalWrite(LED_Armed, LOW);
+  }  
+    
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +136,7 @@ void loop() {
     
   if(standby.isExpired() && trigger.onPressed()){ 
   //if(standby.isExpired() && true ){   // this line is used to constantly trigger the cycle for testing
-    standby.stop(); // turns off standby so its not blinking in the active stage, it will start blinking once it is restarted att he end of the action.
+    standby.stop(); // turns off standby so its not blinking in the active stage, it will start blinking once it is restarted at the end of the action.
     Serial.println("button was pressed");
     Serial.println("air was triggered");
     digitalWrite(LED_Armed, LOW); // LED is iether built in or wired externally, so it doesn't use the relays ttl
